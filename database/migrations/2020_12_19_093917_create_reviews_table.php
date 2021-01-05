@@ -21,7 +21,7 @@ class CreateReviewsTable extends Migration
             $table->unsignedBigInteger('bookable_id')->index();
             $table->foreign('bookable_id')->references('id')->on('bookables');
             $table->unsignedBigInteger('booking_id')->index()->nullable();
-            $table->foreign('booking_id')->references('id')->on('bookables');
+            $table->foreign('booking_id')->references('id')->on('bookings');
         });
     }
 

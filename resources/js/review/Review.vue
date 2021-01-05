@@ -1,7 +1,9 @@
 <template>
     <div>
-        <div class="row" v-if="error">Unknown error has occurred, please try again later!</div>
-        <div class="row" v-else>
+        <success v-if="success">You've left a review, thank you very much!</success>
+        <fatal-error v-if="error"></fatal-error>
+        <div class="row" v-if="!success && !error">
+
             <div :class="[{'col-md-4': twoColumns}, {'d-none': oneColumn}]">
                 <div class="card">
                     <div class="card-body">
@@ -31,11 +33,12 @@
                         </div>
                         <div class="form-group">
                             <label for="content" class="text-muted">Describe your experience with </label>
-                            <textarea name="" id="content" cols="30" rows="10" class="form-control"
-                                      v-model="review.content"></textarea>
+                            <textarea name="content" id="content" cols="30" rows="10" class="form-control"
+                                      v-model="review.content" :class="[{'is-invalid': errorFor('content')}]"></textarea>
+                            <v-errors :errors="errorFor('content')"></v-errors>
                         </div>
 
-                        <button class="btn btn-lg btn-primary btn-block" @click.prevent="submit" :disabled="loading">Submit</button>
+                        <button class="btn btn-lg btn-primary btn-block" @click.prevent="submit" :disabled="sending">Submit</button>
                     </div>
                 </div>
             </div>
@@ -44,9 +47,10 @@
 </template>
 
 <script>
-import {is404} from "../shared/utils/response";
-
+import {is404, is422} from "../shared/utils/response";
+import validationErrors from "../shared/mixins/validationErrors"
 export default {
+    mixins: [validationErrors],
     data() {
         return {
             review: {
@@ -58,35 +62,27 @@ export default {
             loading: false,
             booking: null,
             error: false,
-            ukulele: null
+            sending: false,
+            success: false,
         };
     },
-    created() {
+    async created() {
         this.review.id = this.$route.params.id
         this.loading = true;
-        console.log(this.review.id);
-        axios
-            .get(`/api/review/${this.review.id}`)
-            .then(response => {
-                this.existingReview = response.data.data;
-            })
-            .catch(
-                err => {
-                    if (is404(err)) {
-                        return axios.get(`/api/booking-by-review/${this.review.id}`)
-                            .then(response => {
-                                this.booking = response.data.data;
-                                this.loading = false;
 
-                            }).catch(err => {
-                                this.error = !is404(err);
-                            });
-                    }
-
+        try {
+            this.existingReview = (await axios.get(`/api/reviews/${this.review.id}`)).data.data;
+        } catch (err) {
+            if (is404(err)) {
+                try {
+                   this.booking = (await axios.get(`/api/booking-by-review/${this.review.id}`)).data.data;
+                } catch(err) {
+                    this.error = !is404(err);
                 }
-            ).then(() => {
-            this.loading = false
-        });
+            }
+        }
+
+        this.loading = false;
     },
     computed: {
         alreadyReviewed() {
@@ -110,17 +106,30 @@ export default {
     },
     methods: {
         submit() {
-            this.loading = true;
+            this.sending = true;
+            this.errors = null;
+            this.success = false;
+
             axios
-                .post(`/api/review`, this.review)
-                .then(response => console.log(response))
-                .catch((err) => this.error = true)
-                .then(() => this.loading = false);
+                .post(`/api/reviews`, this.review)
+                .then(response => {
+                    this.success = 201 === response.status;
+                })
+                .catch((err) => {
+                    if (is422(err)) {
+                        const errors = err.response.data.errors;
+
+                        if (errors['content'] && 1 === _.size(errors)) {
+                            this.errors = errors;
+                            return;
+                        }
+                    }
+
+                    this.error = true;
+                })
+                .then(() => this.sending = false);
         }
+
     }
 }
 </script>
-
-<style scoped>
-
-</style>

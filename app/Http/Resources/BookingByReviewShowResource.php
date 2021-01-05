@@ -14,7 +14,6 @@ class BookingByReviewShowResource extends JsonResource
      */
     public function toArray($request)
     {
-        var_dump($this); die();
         return [
             'booking_id' => $this->id,
             'from' => $this->from,

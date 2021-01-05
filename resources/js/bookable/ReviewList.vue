@@ -24,10 +24,10 @@
 </template>
 
 <script>
-// import moment from "moment";
+
 export default {
     props: {
-        bookableId: Number
+        bookableId: [String, Number]
     },
     data() {
         return {

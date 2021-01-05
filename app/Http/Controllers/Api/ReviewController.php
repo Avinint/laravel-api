@@ -29,13 +29,15 @@ class ReviewController extends Controller
             return abort(404);
         }
 
+
         $booking->review_key = '';
         $booking->save();
 
         $review = Review::make($data);
 
         $review->booking_id = $booking->id;
-        $review->bookable_id = $booking->bookable->bookable_id;
+        $review->bookable_id = $booking->bookable_id;
+
         $review->save();
 
         return new ReviewResource($review);

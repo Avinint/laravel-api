@@ -13,7 +13,7 @@
 
 <script>
 export default {
-    props: {title: String, description: String, id: Number}
+    props: {title: String, description: String, id: [String, Number]}
 }
 </script>
 
