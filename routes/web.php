@@ -1,5 +1,6 @@
 <?php
 
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -13,6 +14,19 @@ use Illuminate\Support\Facades\Route;
 |
 */
 
+Route::middleware('auth')->get('/user', function (Request $request) {
+    return $request->user();
+});
+
+//Auth::routes();
+
 Route::get('/{any?}', function () {
     return view('welcome');
 })->where('any', '^(?!api\\/)[\\/\\w\\.\\,-]*');
+
+
+Route::get('/dashboard', function () {
+    return view('dashboard');
+})->middleware(['auth'])->name('dashboard');
+
+require __DIR__.'/auth.php';

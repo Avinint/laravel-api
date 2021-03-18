@@ -28,6 +28,17 @@ Vue.component("v-errors", ValidationErrors);
 
 const store = new Vuex.Store(storeDefinition);
 
+window.axios.interceptors.response.use(
+    response => response,
+    error => {
+        if (401 === error.response.status) {
+            store.dispatch("logout");
+        }
+
+        return Promise.reject(error);
+    }
+);
+
 const app = new Vue({
     el: '#app',
     router,
@@ -36,12 +47,7 @@ const app = new Vue({
         index: Index,
     },
     async beforeCreate(){
-        this.$store.dispatch("loadStoredState");
-
-        await axios.get('/sanctum/csrf-cookie');
-        await axios.post('/login', {
-            email: 'maurine57@example.com',
-            password: 'password'
-        })
+        await this.$store.dispatch("loadStoredState");
+        await this.$store.dispatch("loadUser");
     }
 });

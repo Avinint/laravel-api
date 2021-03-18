@@ -46,6 +46,10 @@ class RegisteredUserController extends Controller
 
         event(new Registered($user));
 
+        if ($request->isXmlHttpRequest()) {
+            return $user;
+        }
+
         return redirect(RouteServiceProvider::HOME);
     }
 }
